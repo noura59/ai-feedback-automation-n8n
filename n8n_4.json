@@ -1,0 +1,245 @@
+{
+  "name": "n8n_4",
+  "nodes": [
+    {
+      "parameters": {
+        "formTitle": "resturant review",
+        "formDescription": "your feedback about us ?",
+        "formFields": {
+          "values": [
+            {
+              "fieldLabel": "what is your name ?"
+            },
+            {
+              "fieldLabel": "what is your phone num?",
+              "fieldType": "number"
+            },
+            {
+              "fieldLabel": "please give us your feedback . "
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.formTrigger",
+      "typeVersion": 2.5,
+      "position": [
+        0,
+        0
+      ],
+      "id": "b0b6310a-ddf2-4069-b57e-7c893f20bf69",
+      "name": "On form submission",
+      "webhookId": "55e4c02d-df84-4798-939e-47dc7dd1799d"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=You are a sentiment analysis assistant.\n\nAnalyze the following restaurant feedback:\n{{ $json['please give us your feedback . '] }}\n\nTranslate it internally if needed, but DO NOT include the translation in the output.\n\nClassify the sentiment as either \"positive\" or \"negative\".\n\nImportant: Your output must be ONLY one word:\npositive\nor\nnegative\n\nDo not return JSON.\nDo not add any extra text.",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        208,
+        0
+      ],
+      "id": "e94d40f3-9352-4840-805b-9dcb6893c455",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "model": "allam-2-7b",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGroq",
+      "typeVersion": 1,
+      "position": [
+        128,
+        208
+      ],
+      "id": "b2d94077-0be6-4762-bc94-cd9e3bb04f0c",
+      "name": "Groq Chat Model",
+      "credentials": {
+        "groqApi": {
+          "id": "dGMgFbEbNiKaVVPH",
+          "name": "Groq account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "1KsF50L5hFthTQk0Ff0oPkeI4ETVD4seyNPu6FzidMeA",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1KsF50L5hFthTQk0Ff0oPkeI4ETVD4seyNPu6FzidMeA/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Name": "={{ $('On form submission').item.json['what is your name ?'] }}",
+            "Phone": "={{ $('On form submission').item.json['what is your phone num?'] }}",
+            "Feedback": "={{ $('On form submission').item.json['please give us your feedback . '] }}",
+            "Timestamp": "={{ $('On form submission').item.json.submittedAt }}",
+            "Classification": "={{ $json.output }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "Name",
+              "displayName": "Name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Phone",
+              "displayName": "Phone",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Feedback",
+              "displayName": "Feedback",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Classification",
+              "displayName": "Classification",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Timestamp",
+              "displayName": "Timestamp",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        592,
+        0
+      ],
+      "id": "f25e07ef-9b59-49e3-bb9a-ed3a40210c3d",
+      "name": "Append row in sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "lbaVC8QaCjM5khyh",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sendTo": "noura592002@gmail.com",
+        "subject": "New Customer Feedback - {{ $json.Classification }}",
+        "message": "=Hi,  We received a new feedback entry.  Customer Name: {{ $json.Name }} Sentiment: {{ $json.Classification }} Message: {{ $json.Feedback }}  Check the Google Sheet for more details.",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        336,
+        240
+      ],
+      "id": "0878ccd2-1a4b-4a1f-ae19-f8ea65440427",
+      "name": "Send a message",
+      "webhookId": "b86d49ec-a7c0-41d2-89f8-dfdb3453d5c2",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "0i2MKGD2BiOMJaXP",
+          "name": "Gmail account 3"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "On form submission": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Groq Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Append row in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Append row in sheet": {
+      "main": [
+        [
+          {
+            "node": "Send a message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "66fb9684-ecbd-4d42-b74a-f517d3529b09",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "1e664e93fdd7ca508d69142ea939c3ebb8eea39a5d1670f1f6f7b6fa581218db"
+  },
+  "id": "fioQhDheaHO2ZehU",
+  "tags": []
+}
